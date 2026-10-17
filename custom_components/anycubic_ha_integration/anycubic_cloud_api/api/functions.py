@@ -907,6 +907,25 @@ class AnycubicAPIFunctions(AnycubicAPIBase):
             encryption_mode=shengwang["encryption_mode"],
         )
 
+    async def close_camera(
+        self,
+        printer: AnycubicPrinter,
+    ) -> str | None:
+        """Tell the printer to stop the camera stream opened by get_camera_session.
+
+        Without this the printer keeps pushing video after every viewer has left,
+        and features that need the camera, such as time-lapse, stop working.
+        """
+        if not printer:
+            return None
+
+        return await self._send_anycubic_order(
+            order_request=AnycubicBaseOrderRequest(
+                order_id=int(AnycubicOrderID.CAMERA_CLOSE),
+                printer_id=printer.id,
+            ),
+        )
+
     async def _send_order_multi_color_box_get_info(
         self,
         printer: AnycubicPrinter,

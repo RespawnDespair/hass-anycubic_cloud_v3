@@ -16,6 +16,7 @@ from .coordinator import AnycubicCloudDataUpdateCoordinator
 from .file_preview import find_project_preview_url, normalize_preview_filename
 
 WS_TYPE_CAMERA_SESSION = f"{DOMAIN}/camera_session"
+WS_TYPE_CAMERA_CLOSE = f"{DOMAIN}/camera_close"
 WS_TYPE_FILE_PREVIEW = f"{DOMAIN}/file_preview"
 
 FILE_PREVIEW_CACHE = "file_preview_cache"
@@ -29,6 +30,7 @@ FILE_PREVIEW_TIMEOUT_SECONDS = 15
 def async_register_websocket_api(hass: HomeAssistant) -> None:
     """Register Anycubic Cloud websocket commands."""
     websocket_api.async_register_command(hass, websocket_camera_session)
+    websocket_api.async_register_command(hass, websocket_camera_close)
     websocket_api.async_register_command(hass, websocket_file_preview)
 
 
@@ -197,3 +199,52 @@ async def websocket_camera_session(
         return
 
     connection.send_result(msg["id"], camera_session.data)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): WS_TYPE_CAMERA_CLOSE,
+        vol.Required("config_entry"): str,
+        vol.Required("printer_id"): vol.Coerce(int),
+    }
+)
+@websocket_api.async_response
+async def websocket_camera_close(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Stop the camera stream that camera_session opened on a printer."""
+    entry_id = msg["config_entry"]
+    printer_id = msg["printer_id"]
+
+    entry_data = hass.data.get(DOMAIN, {}).get(entry_id)
+    if not entry_data:
+        connection.send_error(
+            msg["id"],
+            "config_entry_not_found",
+            "Could not find Anycubic Cloud config entry.",
+        )
+        return
+
+    coordinator: AnycubicCloudDataUpdateCoordinator = entry_data[COORDINATOR]
+    printer = coordinator.get_printer_for_id(printer_id)
+    if printer is None:
+        connection.send_error(
+            msg["id"],
+            "printer_not_found",
+            "Could not find Anycubic printer.",
+        )
+        return
+
+    try:
+        await printer.close_camera()
+    except Exception:  # noqa: BLE001
+        connection.send_error(
+            msg["id"],
+            "camera_close_failed",
+            "Could not close the camera.",
+        )
+        return
+
+    connection.send_result(msg["id"], None)

@@ -45,7 +45,7 @@ class AnycubicOrderID(IntEnum):
     GET_RELEASE_FILM = 802  # Not handled
     SET_PRINT_STATUS_FREE = 901  # Not handled, appears un-used.
     CAMERA_OPEN = 1001
-    CAMERA_CLOSE = 1002  # Not handled, appears un-used.
+    CAMERA_CLOSE = 1002
     MULTI_COLOR_BOX_GET_INFO = 1206
     MULTI_COLOR_BOX_DRY = 1207
     FEED_FILAMENT = 1208

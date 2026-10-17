@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- WebSocket command `anycubic_ha_integration/camera_close` (`config_entry` + `printer_id`) sends order 1002 so a printer stops the camera stream that `camera_session` opened. Without it the camera stays open after viewers leave and time-lapse recording stops working.
+
 ## 0.4.1
 
 ### Fixed

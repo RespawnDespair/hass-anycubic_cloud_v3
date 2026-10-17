@@ -2430,6 +2430,13 @@ class AnycubicPrinter:
             return None
         return session
 
+    async def close_camera(
+        self,
+    ) -> str | None:
+        return await self._api_parent.close_camera(
+            self,
+        )
+
     async def delete_local_file(
         self,
         file_name: str,
